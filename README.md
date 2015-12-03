@@ -1,2 +1,2 @@
 # Workbench
-sqlite3, python, tkinter database workbench
+sqlite3, python3, tkinter: database workbench
