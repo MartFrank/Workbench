@@ -2,7 +2,7 @@
 
 from tkinter import *
 from tkinter.ttk import *
-from Moggs import *
+#~ from Moggs import *
 
 
 

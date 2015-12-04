@@ -34,11 +34,11 @@ class Workbench(Tk):
         # middle frame
         mFrame = Frame(mainFrame)
         mFrame.pack(side = "left", fill = "both", expand = "yes", padx=4)
-        self.mFrame = mFrame
+
         # right frame
         rFrame = Frame(mainFrame)
         rFrame.pack(side = "left", fill = "y", expand = "no", padx=4)
-
+        
         b = Button(rFrame, text = "New Table", command=self.newTable)
         b.pack()
         b = Button(rFrame, text = "Edit Table", command=self.editTable)
@@ -98,7 +98,7 @@ class Workbench(Tk):
                 
                 
     def dropTable(self):
-        # get table name & description for 'active' / selected table
+        # get table name for selected table
         if self.workArea.oldactive:
             tn = self.workArea.oldactive
             sql = "drop table %s" %tn
@@ -147,7 +147,7 @@ class Workbench(Tk):
             tdesc = self.executeFetchall(sql)
             sql = "select * from %s" %(tn)
             tdata = self.executeFetchall(sql)
-            DataEditor(self, tableDesc = tdesc, tableData = tdata)
+            DataEditor(self, tableName=tn, tableDesc = tdesc, tableData = tdata)
         
     def loadData(self):
         ## load the data from a csv file into selected table
@@ -218,6 +218,11 @@ class DataEditor(Toplevel):
         Toplevel.__init__(self)
         self.title("Data Viewer Table : %s" %tableName)
         self.parent = parent
+        
+        bb = Buttonbox(self)
+        bb.add("Close", command=self.withdraw)
+        bb.alignbuttons()
+        bb.pack(fill="x")
         
         self.dataEditor = ScrolledTreeview(self, show="headings")
         self.dataEditor.pack(fill="both", expand="yes")
@@ -419,6 +424,7 @@ class SQLScratchPad(Toplevel):
         self.sqlOutput = ScrolledText(self)
         self.sqlOutput.pack(fill="both", expand="yes")
         
+    
     def log(self, text):
         self.sqlOutput.insert("end", "-------------------------------------\n")
         self.sqlOutput.insert("end", text)
