@@ -8,6 +8,7 @@ import os
 import shutil
 import sys
 import glob
+import pprint
 
 
 class Workbench(Tk):
@@ -17,25 +18,26 @@ class Workbench(Tk):
 
         # toolbar
         self.toolbar = Buttonbox(self)
+        self.toolbar.add("SQL Pad", command=self.sqlPad)
         self.toolbar.add("Exit", command=self.exit)
         self.toolbar.alignbuttons()
         self.toolbar.pack(side = "top", fill = "x", expand = "no")
        
         # main frame
         mainFrame = Frame(self)
-        mainFrame.pack(side = "top", fill = "both", expand = "yes")
+        mainFrame.pack(side = "top", fill = "both", expand = "yes", padx=4)
             
         # left frame
         lFrame = Frame(mainFrame)
-        lFrame.pack(side = "left", fill = "y", expand = "no")
+        lFrame.pack(side = "left", fill = "y", expand = "no", padx=4)
 
         # middle frame
         mFrame = Frame(mainFrame)
-        mFrame.pack(side = "left", fill = "both", expand = "yes")
+        mFrame.pack(side = "left", fill = "both", expand = "yes", padx=4)
         self.mFrame = mFrame
         # right frame
         rFrame = Frame(mainFrame)
-        rFrame.pack(side = "left", fill = "y", expand = "no")
+        rFrame.pack(side = "left", fill = "y", expand = "no", padx=4)
 
         b = Button(rFrame, text = "New Table", command=self.newTable)
         b.pack()
@@ -47,10 +49,6 @@ class Workbench(Tk):
         b.pack()
         b = Button(rFrame, text = "View Data", command=self.viewData)
         b.pack()
-
-        # bottom frame
-##        botFrame = Frame(self)
-##        botFrame.pack(side = "top", fill = "both", expand = "yes")
 
         # status bar
         self.statusBar = LabelEntry(self)
@@ -65,6 +63,9 @@ class Workbench(Tk):
         self.workArea.pack(side = "top", fill = "both", expand = "yes")
         self.workArea.oldactive = None ## which object is selected
 
+    def sqlPad(self):
+        if self.connection:
+            pad = SQLScratchPad(self.connection)
 
 
     def clearWorkArea(self):
@@ -339,6 +340,7 @@ class TableColumn(Frame):
             return "%s %s" %(cn, dt)
 
 class Table:
+    """object on canvas that represents a database table"""
     def __init__(self, canvas, tableName, X, Y, W, H):
         self.canvas = canvas
         self.name = tableName
@@ -368,7 +370,7 @@ class Table:
         self.canvas.create_line(X + 45, Y + 20, X + 45, Y + 50, width = 2, tags=tableName)
         
         # label
-        self.canvas.create_text(X, Y+H, anchor = "nw", text = "%s" %tableName[0:7], font = "Courier 8", tags=tableName)
+        self.canvas.create_text(X, Y+H, anchor = "nw", text = "%s" %tableName, font = "Courier 6", tags=tableName)
         
 class TagBinder:
     def __init__(self, canvas, tag):
@@ -380,13 +382,64 @@ class TagBinder:
             self.canvas.itemconfig(self.canvas.oldactive, outline="black")
         except:
             pass
-            
-            
         try:
             self.canvas.itemconfig(self.tag, outline="red")
         except:
+            ## this is a real bad hack
+            ## basically one of the items on the canvas does not suport "outline"
+            ## this except catches that and stops changing colour
+            ## happy accident means the outside shape is changed but nothing else!
             pass
         self.canvas.oldactive = self.tag
+        
+        
+class SQLScratchPad(Toplevel):
+    def __init__(self, connection):
+        Toplevel.__init__(self)
+        self.title("SQL Scratch Pad")
+        
+        self.connection = connection
+        
+        l = Label(self, text = "SQL Input")
+        l.pack(fill="x")
+        self.sqlInput = ScrolledText(self, height=3)
+        self.sqlInput.pack(fill="both", expand="yes")
+        
+        bb = Buttonbox(self)
+        bb.add("Execute", command=self.execute)
+        bb.add("Execute & Fetch One", command=self.executeFetchone)
+        bb.add("Execute & Fetch All", command=self.executeFetchall)
+        bb.add("Close", command=self.withdraw)
+        bb.alignbuttons()
+        bb.pack(fill="x")
+        
+        
+        l = Label(self, text = "Results...")
+        l.pack(fill="x")
+        self.sqlOutput = ScrolledText(self)
+        self.sqlOutput.pack(fill="both", expand="yes")
+        
+    def log(self, text):
+        self.sqlOutput.insert("end", text)
+        self.sqlOutput.see("end")
+        
+    def execute(self):
+        sql = self.sqlInput.gettext()
+        cur = self.connection.cursor()
+        cur.execute(sql)
+        self.log("executed")
+        
+    def executeFetchone(self):
+        sql = self.sqlInput.gettext()
+        cur = self.connection.cursor()
+        cur.execute(sql)
+        self.log(pprint.pformat(cur.fetchone()))
+        
+    def executeFetchall(self):
+        sql = self.sqlInput.gettext()
+        cur = self.connection.cursor()
+        cur.execute(sql)
+        self.log(pprint.pformat(cur.fetchall()))
         
         
 wb = Workbench()
