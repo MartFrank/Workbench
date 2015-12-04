@@ -4,18 +4,22 @@ import sqlite3 as sqldb
 from Moggs import *
 from tkinter import filedialog
 
+import os
+import shutil
+import sys
+import glob
+
+
 class Workbench(Tk):
     def __init__(self):
         Tk.__init__(self)
         self.title("SQL Workbench")
 
         # toolbar
-##        self.toolbar = Buttonbox(self)
-##        self.toolbar.add("New")
-##        self.toolbar.add("Open")
-##        self.toolbar.add("Close")
-##        self.toolbar.add("Exit", command=self.exit)
-##        self.toolbar.pack(side = "top", fill = "x", expand = "no")
+        self.toolbar = Buttonbox(self)
+        self.toolbar.add("Exit", command=self.exit)
+        self.toolbar.alignbuttons()
+        self.toolbar.pack(side = "top", fill = "x", expand = "no")
        
         # main frame
         mainFrame = Frame(self)
@@ -61,8 +65,6 @@ class Workbench(Tk):
         self.workArea.pack(side = "top", fill = "both", expand = "yes")
         self.workArea.oldactive = None ## which object is selected
 
-        # list tables in db, create canvas objects for each
-##        self.listTables()
 
 
     def clearWorkArea(self):
@@ -169,22 +171,28 @@ class ConnectionManager(Frame):
         Frame.__init__(self, cont)
         self.parent = parent
         
-        l = Label(self, text = "Connection Manager")
+        l = Label(self, text = "Choose Connection:")
         l.pack(fill = "x")
         
-        self.databaseName = LabelEntry(self, text = "Database Name")
+        self.databaseName = LabelCombobox(self, text = "Database Name")
         self.databaseName.pack(fill = "x")
 
         # testing
         self.databaseName.set("moggs.dbf")
-##        self.connect()
+
         
         b = Button(self, text = "Connect", command = self.connect)
-        b.pack(fill = "x")
+        b.pack()
+        
+        # populate databaeName
+        self.populateDatabaseName()
         
         
     def connect(self):
         self.parent.statusBar.set("")
+        
+        self.backupDatabase()
+        
         try:
             self.connection = sqldb.connect(self.databaseName.get())
         except Exception as ex:
@@ -193,6 +201,16 @@ class ConnectionManager(Frame):
             self.parent.connection = self.connection # fudge?
             self.parent.statusBar.set("Connected to %s" %self.databaseName.get())
             self.parent.listTables()
+            
+    def populateDatabaseName(self):
+        filenames = glob.glob("*.dbf")
+        filenames.sort()
+        self.databaseName.setlist(filenames)
+        
+    def backupDatabase(self):
+        dbname = self.databaseName.get()
+        shutil.copyfile(dbname, dbname.replace(".dbf", ".bak"))
+        
         
 class DataEditor(Toplevel):
     def __init__(self, parent=None, tableName="", tableDesc=None, tableData=None):
@@ -210,7 +228,7 @@ class DataEditor(Toplevel):
             self.dataEditor.heading(col, text=col)
         
         for row in tableData:
-            print(row)
+            #~ print(row)
             self.dataEditor.insert("", "end", values=row)
             
         
