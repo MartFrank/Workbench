@@ -8,11 +8,19 @@ from .scrolledcanvas import *
 from .scrolledtext import *
 from .tree import *
 from .datechooser import *
+<<<<<<< HEAD
 #~ from .printer import *
 from .radioselect import *
 #~ from .Dial import *
 #~ from .ImageLabel import *
 #~ from .BarChart import *
+=======
+#from .printer import *
+from .radioselect import *
+#from .Dial import *
+#from .ImageLabel import *
+#from .BarChart import *
+>>>>>>> origin/master
 
 def alignlabels(widgets):
     
