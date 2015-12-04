@@ -420,7 +420,9 @@ class SQLScratchPad(Toplevel):
         self.sqlOutput.pack(fill="both", expand="yes")
         
     def log(self, text):
+        self.sqlOutput.insert("end", "-------------------------------------\n")
         self.sqlOutput.insert("end", text)
+        self.sqlOutput.insert("end", "\n-------------------------------------\n")
         self.sqlOutput.see("end")
         
     def execute(self):
